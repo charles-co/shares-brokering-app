@@ -45,8 +45,10 @@ def load_curreny():
         with session() as session:
             _filter = list(
                 map(
-                    lambda item: and_(
-                        Rate.rate != data["rates"][item], Rate.currency == item
+                    lambda item: (
+                        and_(
+                            Rate.rate != data["rates"][item], Rate.currency == item
+                        ).self_group()
                     ),
                     data["rates"],
                 )
