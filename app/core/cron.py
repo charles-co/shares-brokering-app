@@ -22,5 +22,5 @@ scheduler.add_job(
     id="load_currency",
     replace_existing=True,
     max_instances=1,
-    misfire_grace_time=lambda: 60 * 15,
+    misfire_grace_time=900,
 )
