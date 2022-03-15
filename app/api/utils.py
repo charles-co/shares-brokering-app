@@ -77,4 +77,4 @@ def load_curreny():
                 session.commit()
 
 
-load_curreny()
+# load_curreny()

@@ -18,9 +18,9 @@ scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, timezo
 scheduler.add_job(
     load_curreny,
     "cron",
-    hour=3,
+    minute=30,
     id="load_currency",
     replace_existing=True,
     max_instances=1,
-    misfire_grace_time=60 * 60 * 1.5,
+    misfire_grace_time=lambda: 60 * 15,
 )
