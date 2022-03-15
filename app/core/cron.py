@@ -14,9 +14,7 @@ jobstores = {"default": SQLAlchemyJobStore(url="sqlite:///jobs.sqlite")}
 executors = {"default": ThreadPoolExecutor(20)}
 job_defaults = {"coalesce": False, "max_instances": 3}
 
-scheduler = BackgroundScheduler(
-    jobstores=jobstores, executors=executors, timezone=utc, daemon=True
-)
+scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, timezone=utc)
 scheduler.add_job(
     load_curreny,
     "cron",
@@ -24,5 +22,5 @@ scheduler.add_job(
     id="load_currency",
     replace_existing=True,
     max_instances=1,
-    misfire_grace_time=180,
+    misfire_grace_time=60 * 60 * 1.5,
 )
