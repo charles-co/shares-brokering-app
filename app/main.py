@@ -3,6 +3,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.core.config import settings
+from app.core.cron import scheduler
 from app.db.database import init_db
 from app.models import *  # noqa
 
@@ -14,6 +15,8 @@ app = FastAPI(
 @app.on_event("startup")
 async def on_startup():
     await init_db()
+    scheduler.print_jobs()
+    scheduler.start()
 
 
 @app.get("/ping")

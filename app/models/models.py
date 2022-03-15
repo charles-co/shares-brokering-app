@@ -3,12 +3,15 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import Column, ForeignKey, Integer
+from sqlalchemy import DDL, Column, ForeignKey, Integer, event, func
 from sqlalchemy.orm import RelationshipProperty
-from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
+from sqlmodel import DateTime, Field, Relationship, SQLModel, UniqueConstraint
 
 
-class User(SQLModel, table=True):
+class User(
+    SQLModel,
+    table=True,
+):
 
     __table_args__ = (UniqueConstraint("username"), UniqueConstraint("email"))
 
@@ -44,8 +47,21 @@ class Company(SQLModel, table=True):
         index=True,
     )
     available_shares: int = Field(..., gt=-1)
-    created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(
+        sa_column=Column(
+            DateTime(timezone=True), nullable=False, server_default=func.now()
+        ),
+        default=None,
+    )
+    updated_at: datetime = Field(
+        sa_column=Column(
+            DateTime(timezone=True),
+            nullable=False,
+            server_default=func.now(),
+            server_onupdate=func.now(),
+        ),
+        default=None,
+    )
     share_holders: List["ShareHolder"] = Relationship(
         sa_relationship=RelationshipProperty(
             "ShareHolder",
@@ -80,3 +96,50 @@ class ShareHolder(SQLModel, table=True):
         )
     )
     quantity: float = Field(0.00, gt=-1)
+
+
+class Rate(SQLModel, table=True):
+
+    __table_args__ = (UniqueConstraint("currency"),)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    base: str
+    currency: str
+    date: str
+    rate: float
+
+
+event.listen(
+    Company.__table__,
+    "after_create",
+    DDL(
+        """
+            CREATE TRIGGER updated_at_trigger
+            AFTER UPDATE OF name, currency, price, available_shares, symbol
+            ON company
+            FOR EACH ROW
+            BEGIN
+                UPDATE company
+                SET updated_at = CURRENT_TIMESTAMP
+                WHERE id = new.id;
+            END;
+        """
+    ),
+)
+
+event.listen(
+    Rate.__table__,
+    "after_create",
+    DDL(
+        """
+            CREATE TRIGGER updated_rate_trigger
+            AFTER UPDATE OF rate
+            ON rate
+            BEGIN
+                UPDATE company
+                SET price = ROUND(((new.rate / old.rate) * price), 2)
+                WHERE currency = old.currency;
+            END;
+        """
+    ),
+)

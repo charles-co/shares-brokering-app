@@ -5,13 +5,21 @@ from sqlalchemy.future import select
 from app.core.auth import get_current_active_user
 from app.db.database import get_session
 from app.models import Company, ShareHolder, User
+from app.schemas.base import ErrorSchema
 from app.schemas.user import UserModelSchema
 
 router = APIRouter()
 
 
 @router.post(
-    "/buy/{company_id}", response_model=UserModelSchema, status_code=status.HTTP_200_OK
+    "/buy/{company_id}",
+    response_model=UserModelSchema,
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+        status.HTTP_406_NOT_ACCEPTABLE: {"model": ErrorSchema},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorSchema},
+    },
 )
 async def buy(
     company_id: int,

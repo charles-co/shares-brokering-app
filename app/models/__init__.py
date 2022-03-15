@@ -1,1 +1,1 @@
-from .models import Company, ShareHolder, User  # noqa
+from .models import Company, Rate, ShareHolder, User  # noqa

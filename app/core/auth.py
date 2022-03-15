@@ -6,11 +6,12 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
+from app.db.database import engine
 from app.models import User
 from app.schemas.token import TokenData
 from app.schemas.user import UserModelSchema
@@ -31,8 +32,6 @@ def get_password_hash(password):
 
 
 async def get_user(username: str):
-
-    engine = create_async_engine(settings.DATABASE_URL, echo=True, future=True)
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session() as session:

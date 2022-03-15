@@ -16,6 +16,7 @@ from app.core.auth import (
 from app.core.config import settings
 from app.db.database import get_session
 from app.models import User
+from app.schemas.base import ErrorSchema
 from app.schemas.token import Token
 from app.schemas.user import UserModelSchema, UserRegistrationSchema
 
@@ -39,13 +40,25 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 
 @router.get(
-    "/users/me/", response_model=UserModelSchema, status_code=status.HTTP_200_OK
+    "/users/me/",
+    response_model=UserModelSchema,
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+    },
 )
 async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return UserModelSchema.from_orm(current_user)
 
 
-@router.post("/auth/register", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/auth/register",
+    status_code=status.HTTP_201_CREATED,
+    response_model=Token,
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorSchema},
+    },
+)
 async def user_registration(
     user: UserRegistrationSchema, db: AsyncSession = Depends(get_session)
 ):
@@ -56,7 +69,7 @@ async def user_registration(
         result = await db.execute(statement)
         user = result.one()
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Username or email already exists",
         )
     except NoResultFound:
@@ -68,4 +81,4 @@ async def user_registration(
         await db.commit()
         await db.refresh(user)
         access_token = create_access_token(data={"user_id": user.id})
-        return {"access_token": access_token}
+        return {"access_token": access_token, "token_type": "bearer"}

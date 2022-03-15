@@ -15,13 +15,8 @@ class Settings(BaseSettings):
     # SERVER_NAME: str
     # SERVER_HOST: AnyHttpUrl
     PROJECT_NAME: str = Field(os.getenv("PROJECT_NAME"), env="PROJECT_NAME")
-    # BASE_URL: str = Field(
-    #     os.getenv("BASE_URL", "https://c543-41-190-2-225.ngrok.io"), env="BASE_URL"
-    # )
-    # BASE_API_URL: str = Field(
-    #     os.getenv("BASE_API_URL", "https://c543-41-190-2-225.ngrok.io/api/v1"),
-    #     env="BASE_API_URL",
-    # )
+    FX_API_URL: str = Field(os.getenv("FX_API_URL"), env="FX_API_URL")
+    FX_API_KEY: str = Field(os.getenv("FX_API_KEY"), env="FX_API_KEY")
 
     DATABASE_URL: str = Field(
         os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./database.db"),

@@ -5,7 +5,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlmodel import SQLModel
-from app.models import *
+from app.models import *  # noqa
 
 from alembic import context
 
@@ -45,10 +45,10 @@ def run_migrations_offline():
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
-        render_as_batch=config.get_main_option("sqlalchemy.url").startswith(
-            "sqlite:///"
-        ),
         dialect_opts={"paramstyle": "named"},
+        render_as_batch=config.get_main_option("sqlalchemy.url").startswith(
+            "sqlite+aiosqlite:///"
+        ),
     )
 
     with context.begin_transaction():
@@ -56,7 +56,13 @@ def run_migrations_offline():
 
 
 def do_run_migrations(connection):
-    context.configure(connection=connection, target_metadata=target_metadata)
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        render_as_batch=config.get_main_option("sqlalchemy.url").startswith(
+            "sqlite+aiosqlite:///"
+        ),
+    )
 
     with context.begin_transaction():
         context.run_migrations()
