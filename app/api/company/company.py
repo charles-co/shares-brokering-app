@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import List, Optional
 
+import requests
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import NoResultFound
@@ -253,3 +254,29 @@ async def patch_update_company_by_id(
     await db.commit()
     await db.refresh(company_db)
     return CompanyModelSchema.from_orm(company_db)
+
+
+@router.get(
+    "/quotes/{company_symbol}",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_404_NOT_FOUND: {"model": ErrorSchema},
+    },
+)
+async def get_company_from_api(
+    company_symbol: str,
+):
+
+    url = "https://www.alphavantage.co/query?function=OVERVIEW&symbol=%s&apikey=%s" % (
+        company_symbol,
+        "RV14VT854NVHV1U4",
+    )
+    response: requests.Response = requests.get(url)
+    data = response.json()
+
+    if response.status_code != status.HTTP_200_OK:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
+        )
+
+    return data
